@@ -51,3 +51,10 @@ class Lambdas(Construct):
             layers= [Lay.boto3layer],
             **COMMON_LAMBDA_CONF)
         
+        
+        self.real_time_search = aws_lambda.Function(
+            self, "real_time_search", handler="lambda_function.lambda_handler",
+            description="Perform real-time product search",
+            code=aws_lambda.Code.from_asset("./lambdas/code/real_time_search"),
+            layers=[Lay.boto3layer],
+            **COMMON_LAMBDA_CONF)
