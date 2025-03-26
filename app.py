@@ -3,11 +3,11 @@ import os
 
 import aws_cdk as cdk
 
-from private_assistant_v2.private_assistant_v2_stack import PrivateAssistantV2Stack
+from savvyai.savvyai_stack import savvyai
 
 
 app = cdk.App()
-PrivateAssistantV2Stack(app, "PrivateAssistantV2Stack",
+savvyai(app, "savvyaiStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.

@@ -21,11 +21,11 @@ import json
 
 model_id = 'amazon.nova-pro-v1:0'
 model_id_multimodal = "us.amazon.nova-pro-v1:0"
-agent_name = 'DemoMultimodalAssistant'
+agent_name = 'SavvyaiAssistant'
 #    "foundation_model": "anthropic.claude-3-5-sonnet-20240620-v1:0"
-file_path_agent_data = './private_assistant_v2/agent_data.json'
+file_path_agent_data = './savvyai/agent_data.json'
 
-class PrivateAssistantV2Stack(Stack):
+class savvyai(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
