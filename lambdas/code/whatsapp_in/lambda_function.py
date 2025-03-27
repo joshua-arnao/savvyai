@@ -8,19 +8,16 @@ import json
 import os
 from whatsapp import WhatsappService
 from botocore.exceptions import ClientError
+from serper import extraer_info_util
 
 import logging
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
-
 dynamodb = boto3.resource("dynamodb")
 lambda_client = boto3.client('lambda')
 transcribe_client  = boto3.client('transcribe')
-
-import os
 
 class Config:
     TABLE_NAME = os.environ.get("TABLE_NAME")
@@ -37,16 +34,53 @@ def process_record(record):
     for message in whatsapp_information.messages:
         message_type = message.message.get("type")
         print("type: ",message_type)
+        # if message_type == "text":
+        #     text = message.get_text()
+        #     #message.text_reply(text.replace("/echo ", "")) 
+        #     print("phone_number_id: ",message.phone_number_id)
+        #     data = {
+        #         'message': message.message,
+        #         'phone_number_id' : message.phone_number_id,
+        #         'metadata' : message.metadata
+        #     }
+        #     invoke_other_lambda(data,Config.LAMBDA_BEDROCK_AGENT)
         if message_type == "text":
             text = message.get_text()
-            #message.text_reply(text.replace("/echo ", "")) 
-            print("phone_number_id: ",message.phone_number_id)
-            data = {
-                'message': message.message,
-                'phone_number_id' : message.phone_number_id,
-                'metadata' : message.metadata
-            }
-            invoke_other_lambda(data,Config.LAMBDA_BEDROCK_AGENT)
+            print("Texto recibido:", text)
+
+            # Nuevo: detectar si es una búsqueda web
+            if any(keyword in text.lower() for keyword in ["buscar", "oferta", "promoción", "promociones", "en internet"]):
+                from serper import search_serper
+                query = text.lower().replace("buscar", "").replace("promoción", "").replace("promociones", "").strip()
+                results = search_serper(query)
+                if results:
+                    reply = "*Esto encontré en internet:*\n\n"
+                    # for r in results:
+                    #     reply += f"🔎 *{r['title']}*\n{r['snippet']}\n{r['link']}\n\n"
+                    for r in results:
+                        info = extraer_info_util(r)
+                        reply += (
+                            f"🔎 *{r['title']}*\n"
+                            f"{r['snippet']}\n"
+                            f"🔖 *Marca:* {info['marca']}\n"
+                            f"🏷️ *Descuento:* {info['descuento']}\n"
+                            f"🏬 *Tienda:* {info['tienda']}\n"
+                            f"{r['link']}\n\n"
+                        )
+                else:
+                    reply = "No encontré resultados relevantes."
+
+                message.text_reply(reply)
+            
+            else:
+                # Si no es búsqueda, delega al Bedrock Agent
+                data = {
+                    'message': message.message,
+                    'phone_number_id' : message.phone_number_id,
+                    'metadata' : message.metadata
+                }
+                invoke_other_lambda(data, Config.LAMBDA_BEDROCK_AGENT)
+
 
         else:
             media = message.get_media(message_type,download = True) # Check if there is media audio or image
