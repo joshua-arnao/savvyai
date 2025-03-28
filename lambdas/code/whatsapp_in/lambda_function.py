@@ -6,11 +6,10 @@ import boto3
 import decimal
 import json
 import os
+import logging
 from whatsapp import WhatsappService
 from botocore.exceptions import ClientError
-from serper import extraer_info_util
-
-import logging
+from serper import extraer_info_util, search_serper
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -49,8 +48,8 @@ def process_record(record):
             print("Texto recibido:", text)
 
             # Nuevo: detectar si es una búsqueda web
-            if any(keyword in text.lower() for keyword in ["buscar", "oferta", "promoción", "promociones", "en internet"]):
-                from serper import search_serper
+            if any(keyword in text.lower() for keyword in ["buscar", "oferta", "promoción", "promociones", "en internet", "interesado", "comprar"]):
+                
                 query = text.lower().replace("buscar", "").replace("promoción", "").replace("promociones", "").strip()
                 results = search_serper(query)
                 if results:
@@ -61,7 +60,7 @@ def process_record(record):
                         info = extraer_info_util(r)
                         reply += (
                             f"🔎 *{r['title']}*\n"
-                            f"{r['snippet']}\n"
+                            # f"{r['snippet']}\n"
                             f"🔖 *Marca:* {info['marca']}\n"
                             f"🏷️ *Descuento:* {info['descuento']}\n"
                             f"🏬 *Tienda:* {info['tienda']}\n"
